@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Google-Place-Picker</string>
+    <string name="title_activity_my_place_picker">Map</string>
+</resources>
