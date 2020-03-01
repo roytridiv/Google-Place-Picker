@@ -64,18 +64,16 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
     List<Address> addresses = null;
 
     private static final String KEY_LOCATION = "location";
-    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
-    private boolean mLocationPermissionGranted;
+    //private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+   // private boolean mLocationPermissionGranted;
     // private GeoDataClient placeDetectionClient;
     private FusedLocationProviderClient fusedLocationProviderClient;
 
-    private GoogleApiClient googleApiClient;
+    //private GoogleApiClient googleApiClient;
 
 
-    private final LatLng defaultLocation = new LatLng(23.7449105, 90.3983921);
+    //private final LatLng defaultLocation = new LatLng(23.7449105, 90.3983921);
 
-    //private LatLng current ;
-    private boolean locationGrante;
 
     private Location lastknownlocation;
     private String s = "";
@@ -101,8 +99,6 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
 
         if (savedInstanceState != null)
             lastknownlocation = savedInstanceState.getParcelable(KEY_LOCATION);
-
-
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MyPlacePicker.this);
 
@@ -152,25 +148,10 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
             public void onCameraMove() {
                 LatLng center = mMap.getCameraPosition().target;
                 Log.d("debug", "Eita certer er lat lang: " + center.toString());
-                //  mMap.addMarker(new MarkerOptions().position(center).title("Marker in Sydney"));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(center));
                 textView.setText(center.toString());
                 //setLocation(center);
 
-//                List<Address> addresses = null;
-//                Geocoder geocoder = new Geocoder(MyPlacePicker.this);
-//                try {
-//
-//                    addresses = geocoder.getFromLocation(center.latitude , center.longitude , 1);
-//                    Address obj = addresses.get(0);
-//                    String add = obj.getAddressLine(0);
-//                    add = add + " , " + obj.getCountryName()+ " , " +obj.getCountryCode()+ " , " +obj.getAdminArea();;
-//                    textView.setText(add);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                Log.d("MY_APP", "The size is " +
-//                        addresses.size());
             }
         });
 
@@ -233,16 +214,16 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
     public boolean ok() {
 
         boolean res = false;
-        Log.d("MY_APP_DEBUG", "okok");
+        Log.d("debug", "okok");
 
         int available = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(MyPlacePicker.this);
 
         if (available == ConnectionResult.SUCCESS) {
-            Log.d("MY_APP_DEBUG", "its working");
+            Log.d("debug", "its working");
             res = true;
         } else if (GoogleApiAvailability.getInstance().isUserResolvableError(available)) {
             System.out.println("n");
-            Log.d("MY_APP_DEBUG", "error occured");
+            Log.d("debug", "error ");
             // Dialog d = GoogleApiAvailability.getInstance().getErrorDialog(MainActivity.this, available , Error);
             res = false;
 
