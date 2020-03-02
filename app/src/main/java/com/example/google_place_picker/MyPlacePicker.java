@@ -56,6 +56,7 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
     private GoogleMap mMap;
     final int place_picker_req_code = 1;
     LatLng latLng, current;
+    LatLng center;
     String name;
     ImageView marker;
     View mMarkerParentView;
@@ -64,15 +65,9 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
     List<Address> addresses = null;
 
     private static final String KEY_LOCATION = "location";
-    //private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
-   // private boolean mLocationPermissionGranted;
-    // private GeoDataClient placeDetectionClient;
+
     private FusedLocationProviderClient fusedLocationProviderClient;
 
-    //private GoogleApiClient googleApiClient;
-
-
-    //private final LatLng defaultLocation = new LatLng(23.7449105, 90.3983921);
 
 
     private Location lastknownlocation;
@@ -146,17 +141,30 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
         mMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
             @Override
             public void onCameraMove() {
-                LatLng center = mMap.getCameraPosition().target;
-                Log.d("debug", "Eita certer er lat lang: " + center.toString());
+                center = mMap.getCameraPosition().target;
+               // Log.d("debug", "Eita certer er lat lang: " + center.toString());
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(center));
-                textView.setText(center.toString());
+                textView.setText("Loading....");
+               // textView.setText(center.toString());
                 //setLocation(center);
 
             }
         });
 
+        mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+            @Override
+            public void onCameraIdle() {
+                if(center != null){
+                    Log.d("debug", "Eita certer er lat lang: " + center.toString());
+                    textView.setText(center.toString());
+                    setLocation(center);
+                }
+            }
+        });
 
     }
+
+
 
     public void setLocation(LatLng l) {
 
@@ -164,7 +172,7 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
         try {
 
             addresses = geocoder.getFromLocation(l.latitude, l.longitude, 1);
-            // Address obj = addresses.get(0);
+
             if (addresses.size() != 0) {
                 Address obj = addresses.get(0);
                 String add = obj.getAddressLine(0);
@@ -198,7 +206,7 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
             @Override
             public void onSuccess(Location location) {
                 if (location != null) {
-                    Log.d("MY_APP_DEBUG", "location found");
+                    Log.d("debug", "location found");
 
                     current = new LatLng(location.getLatitude(), location.getLongitude());
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
