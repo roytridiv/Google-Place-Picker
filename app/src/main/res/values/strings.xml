@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">Google-Place-Picker</string>
     <string name="title_activity_my_place_picker">Map</string>
+    <string name="title_activity_make_route">Map_Route</string>
+    <string name="AIzaSyAsMc4rdygUZ3ye9iOfuio_3Ek41KZaaEE">mapsApi</string>
 </resources>

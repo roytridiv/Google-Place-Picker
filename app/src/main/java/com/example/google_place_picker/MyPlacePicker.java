@@ -42,12 +42,20 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.Autocomplete;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import static android.provider.SettingsSlicesContract.KEY_LOCATION;
 
@@ -144,6 +152,7 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
                 center = mMap.getCameraPosition().target;
                // Log.d("debug", "Eita certer er lat lang: " + center.toString());
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(center));
+                sendData(""+center.latitude , ""+center.longitude);
                 textView.setText("Loading....");
                // textView.setText(center.toString());
                 //setLocation(center);
@@ -151,16 +160,16 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
             }
         });
 
-        mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
-            @Override
-            public void onCameraIdle() {
-                if(center != null){
-                    Log.d("debug", "Eita certer er lat lang: " + center.toString());
-                    textView.setText(center.toString());
-                    setLocation(center);
-                }
-            }
-        });
+//        mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+//            @Override
+//            public void onCameraIdle() {
+//                if(center != null){
+//                    Log.d("debug", "Eita certer er lat lang: " + center.toString());
+//                    textView.setText(center.toString());
+//                    setLocation(center);
+//                }
+//            }
+//        });
 
     }
 
@@ -245,4 +254,56 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
     public void requestPermission() {
         ActivityCompat.requestPermissions(MyPlacePicker.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
     }
+
+    public void sendData(String lati , String longi){
+
+        Call<ResponseBody> call = RetrofitClient
+                .getInstance()
+                .getApi()
+                .findLocation(lati, longi);
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                String response_from_the_server = null;
+
+                if(response.body() != null){
+                    response_from_the_server = response.body().toString();
+
+                }else{
+                    Log.d("debug" , "response painai");
+                }
+
+                Log.d("debug" , "response paisi : " + response_from_the_server);
+
+                JSONObject jsonObject = null;
+                try {
+                    if(response_from_the_server != null) {
+                        jsonObject = new JSONObject(response_from_the_server);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    if(jsonObject != null){
+                        JSONObject jsonObject1 = jsonObject.getJSONObject("geolocation");
+                        Log.d("debug", jsonObject1.toString());
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
+    }
+
+
+
+
 }
