@@ -42,15 +42,18 @@
 
         <activity
             android:name=".MakeRoute"
-            android:label="@string/title_activity_make_route" />
-        <activity
-            android:name=".MyPlacePicker"
-            android:label="@string/title_activity_my_place_picker">
+            android:label="@string/title_activity_make_route">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".MyPlacePicker"
+            android:label="@string/title_activity_my_place_picker">
+
         </activity>
         <activity android:name=".MainActivity"></activity>
     </application>

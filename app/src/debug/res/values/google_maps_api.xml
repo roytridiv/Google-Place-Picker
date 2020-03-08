@@ -20,8 +20,10 @@
     Once you have your key (it starts with "AIza"), replace the "google_maps_key"
     string in this file.
     -->
-    <string name="AIzaSyAsMc4rdygUZ3ye9iOfuio_3Ek41KZaaEE" templateMergeStrategy="preserve" translatable="false">api</string>
+   <!-- <string name="AIzaSyDq5gYTlfiBuszmn2IrwQ7T0vxgIBn3Qac" templateMergeStrategy="preserve" translatable="false">api</string> -->
+     <string name="AIzaSyAsMc4rdygUZ3ye9iOfuio_3Ek41KZaaEE" templateMergeStrategy="preserve" translatable="false">api</string>
     <!--
+
     TODO: Before you run your application, you need a Google Maps API key.
 
     To get one, follow this link, follow the directions and press "Create" at the end:
@@ -42,5 +44,5 @@
     Once you have your key (it starts with "AIza"), replace the "google_maps_key"
     string in this file.
     -->
-    <string name="google_maps_key" translatable="false">YOUR_KEY_HERE</string>
+   <!-- <string name="AIzaSyDq5gYTlfiBuszmn2IrwQ7T0vxgIBn3Qac" translatable="false">YOUR_KEY_HERE</string> -->
 </resources>
