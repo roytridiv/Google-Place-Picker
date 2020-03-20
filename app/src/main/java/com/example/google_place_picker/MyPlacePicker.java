@@ -1,27 +1,40 @@
 package com.example.google_place_picker;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -51,17 +64,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import www.sanju.motiontoast.MotionToast;
 
 import static android.provider.SettingsSlicesContract.KEY_LOCATION;
 
 public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private SupportMapFragment mMapFragment;
     final int place_picker_req_code = 1;
     LatLng latLng, current;
     LatLng center;
@@ -81,6 +97,28 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
     private Location lastknownlocation;
     private String s = "";
 
+    EditText from , to ;
+    Button proceed , closeKeyboard;
+
+    String from_lat , from_lng , to_lat , to_lng = "";
+    LatLng fromMain , toMain ;
+    ImageView my_location ;
+    Context context ;
+
+    boolean flag_from =true ;
+    boolean flag_to = false ;
+
+    boolean empty_from_flag = true;
+    boolean empty_to_flag = false ;
+
+    boolean current_flag =true;
+
+    boolean map_moved_from_flag = true;
+    boolean map_moved_to_flag  = false ;
+
+    LottieAnimationView l;
+    LinearLayout linearLayout ;
+    public String loc ="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,26 +127,229 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
 
-
-        Places.initialize(getApplicationContext(), "AIzaSyAsMc4rdygUZ3ye9iOfuio_3Ek41KZaaEE");
 
 
         mMarkerParentView = findViewById(R.id.marker_view_incl);
         marker = findViewById(R.id.marker_icon_view);
         textView = findViewById(R.id.location);
+        from = findViewById(R.id.from);
+        to = findViewById(R.id.to);
+        proceed = findViewById(R.id.makeRoute);
+        my_location = findViewById(R.id.myLocation);
+        closeKeyboard =  findViewById(R.id.set_on_map);
+        l = findViewById(R.id.animationView);
+        linearLayout = findViewById(R.id.noInternet);
+
+        if(!internetOn()){
 
 
-        if (savedInstanceState != null)
-            lastknownlocation = savedInstanceState.getParcelable(KEY_LOCATION);
+            linearLayout.setVisibility(View.VISIBLE);
+            //mMapFragment.getView().setVisibility(View.INVISIBLE);
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MyPlacePicker.this);
+            l.setVisibility(View.VISIBLE);
+            l.playAnimation();
+            l.addAnimatorUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator valueAnimator) {
+
+                }
+            });
+
+            l.setProgress(0.5f);
+        }else{
+
+            l.setVisibility(View.GONE);
+            linearLayout.setVisibility(View.GONE);
+            mapFragment.getMapAsync(this);
 
 
-        if (ok()) {
-            init();
+            Places.initialize(getApplicationContext(), "AIzaSyAsMc4rdygUZ3ye9iOfuio_3Ek41KZaaEE");
+
+
+            MotionToast.Companion.createToast(this,"Map generated!",
+                    MotionToast.Companion.getTOAST_SUCCESS(),
+                    MotionToast.Companion.getGRAVITY_BOTTOM(),
+                    MotionToast.Companion.getLONG_DURATION(),
+                    ResourcesCompat.getFont(this,R.font.helvetica_regular));
+
+
+            if (savedInstanceState != null)
+                lastknownlocation = savedInstanceState.getParcelable(KEY_LOCATION);
+
+
+
+
+            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MyPlacePicker.this);
+
+
+            if (ok()) {
+                init();
+            }
+
+
+
+            from.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+
+                        closeKeyboard.setVisibility(View.VISIBLE);
+
+                        flag_from = true ;
+                        flag_to = false ;
+
+                        empty_from_flag = true ;
+                        empty_to_flag = false ;
+
+
+                        Log.d("debug", "--------------Edit text in FORM typing -------------");
+
+                }
+            });
+
+
+            to.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    closeKeyboard.setVisibility(View.VISIBLE);
+
+                    flag_to = true ;
+                    flag_from = false ;
+
+
+                    empty_to_flag = true ;
+                    empty_from_flag = false ;
+
+//                        if(center == null){
+//                            to.setText("");
+//                        }else{
+//                            to.setText(setLocation(center));
+//                        }
+
+
+                    Log.d("debug", "--------------Edit text in TO typing -------------");
+                }
+            });
+
+
+            from.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @SuppressLint("SetTextI18n")
+                @Override
+                public void onFocusChange(View view, boolean hasFocus) {
+
+
+
+                    if (hasFocus) {
+                        closeKeyboard.setVisibility(View.VISIBLE);
+
+                        flag_from = true ;
+                        flag_to = false ;
+
+//                        empty_from_flag = true ;
+//                        empty_to_flag = false ;
+////                        if(center == null){
+////                            from.setText("");
+////                        }else{
+////                            from.setText(setLocation(center));
+////                        }
+
+
+                        Log.d("debug", "--------------Edit text in FORM typing -------------");
+
+                    } else {
+                        //focus has stopped perform your desired action
+                    }
+                }
+            });
+//
+            to.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @SuppressLint("SetTextI18n")
+                @Override
+                public void onFocusChange(View view, boolean b) {
+                    if (b) {
+                        closeKeyboard.setVisibility(View.VISIBLE);
+
+                        flag_to = true ;
+                        flag_from = false ;
+
+
+//                        empty_to_flag = true ;
+//                        empty_from_flag = false ;
+
+//                        if(center == null){
+//                            to.setText("");
+//                        }else{
+//                            to.setText(setLocation(center));
+//                        }
+
+
+                        Log.d("debug", "--------------Edit text in TO typing -------------");
+
+
+                    } else {
+                        //focus has stopped perform your desired action
+                    }
+                }
+            });
+
+            closeKeyboard.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    hideSoftKeyboard(MyPlacePicker.this);
+                    closeKeyboard.setVisibility(View.GONE);
+                }
+            });
+
+
         }
+
+        my_location.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                init();
+            }
+        });
+
+        init();
+
+//        while(current_flag){
+//            init();
+//            if(!current_flag){
+//                break;
+//            }
+//
+//        }
+
+        proceed.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MyPlacePicker.this, MakeRoute.class);
+
+                if(from_lat == "" || from_lng == "" || to_lat == "" || to_lng == "" || center == null || from_lat == null || from_lng == null || to_lat == null || to_lng == null){
+                   // Toast.makeText(MyPlacePicker.this , " Please set location again" , Toast.LENGTH_LONG);
+                    MotionToast.Companion.createToast(MyPlacePicker.this,"No internet / Location not found!",
+                            MotionToast.Companion.getTOAST_ERROR(),
+                            MotionToast.Companion.getGRAVITY_BOTTOM(),
+                            MotionToast.Companion.getLONG_DURATION(),
+                            ResourcesCompat.getFont(MyPlacePicker.this,R.font.helvetica_regular));
+
+                }else{
+                    intent.putExtra("current_lat", from_lat );
+                    intent.putExtra("current_lng", from_lng);
+                    intent.putExtra("destination_lat", to_lat);
+                    intent.putExtra("destination_lng", to_lng);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(intent);
+                    finish();
+                }
+
+                Log.d("debug" ,"--------ki pailm----------" +from_lat+" , "+from_lng+" , "+to_lat+" , "+to_lng);
+
+
+            }
+        });
+
 
 
     }
@@ -122,9 +363,8 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
                 Place place = Autocomplete.getPlaceFromIntent(data);
                 Log.d("debug", "Eita on activity er moddhe er lat lang: " + place.getName());
                 name = place.getName();
-                // String p = place2.getP
+
                 latLng = place.getLatLng();
-                // lat = place.get
                 mMap.addMarker(new MarkerOptions().position(latLng).title(name));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
 
@@ -141,6 +381,7 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -149,73 +390,165 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
         mMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
             @Override
             public void onCameraMove() {
-                center = mMap.getCameraPosition().target;
-               // Log.d("debug", "Eita certer er lat lang: " + center.toString());
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(center));
-                sendData(""+center.latitude , ""+center.longitude);
-                textView.setText("Loading....");
-               // textView.setText(center.toString());
-                //setLocation(center);
+
+             //   Log.d("debug" , "--------------- Map is moving ---------------");
+
+//                closeKeyboard.setVisibility(View.GONE);
+//                 hideSoftKeyboard(MyPlacePicker.this);
+
+                 empty_from_flag = false;
+                 empty_to_flag = false ;
+
 
             }
         });
 
-//        mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
-//            @Override
-//            public void onCameraIdle() {
+        mMap.setOnCameraMoveStartedListener(new GoogleMap.OnCameraMoveStartedListener() {
+            @Override
+            public void onCameraMoveStarted(int reason) {
+            //    Log.d("debug" , "--------------- Map  STARTED  moving ---------------");
+//
+//                closeKeyboard.setVisibility(View.GONE);
+//                 hideSoftKeyboard(MyPlacePicker.this);
+            }
+        });
+
+        mMap.setOnCameraMoveCanceledListener(new GoogleMap.OnCameraMoveCanceledListener() {
+            @Override
+            public void onCameraMoveCanceled() {
+                Log.d("debug" , "--------------- Map  Cancelled  moving ---------------");
+                closeKeyboard.setVisibility(View.GONE);
+                 hideSoftKeyboard(MyPlacePicker.this);
+
+
+                 map_moved_from_flag = true ;
+
+
+            }
+        });
+
+
+
+        mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+            @Override
+            public void onCameraIdle() {
+            //    Log.d("debug" , "--------------- Map is IDLE ---------------");
+
+                center = mMap.getCameraPosition().target;
+                // Log.d("debug", "Eita certer er lat lang: " + center.toString());
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(center));
+
+               // fromMain = center ;
+
+                if(flag_from){
+                    //from.setText(center.latitude + " , "+center.longitude);
+
+//                    if(empty_from_flag){
+//
+//                    }else{
+                      //  from.setText(setLocation(center));
+                     //   Log.d("debug" ,"--------------- flags from ---------------"+ flag_from );
+                        if(center != null){
+                            from_lat = ""+center.latitude ;
+                            from_lng = ""+center.longitude;
+
+                            //  from.setText(setLocation(center));
+                            // from.setText(from_lat + " , "+ from_lng);
+                            if(map_moved_from_flag){
+                                from.setText(setLocation(center));
+                                map_moved_from_flag = false ;
+                            }
+
+                        }
+                   // }
+
+
+                }
+
+                if(flag_to){
+                   // to.setText(center.latitude + " , "+center.longitude);
+
+//                    if(empty_to_flag){
+//
+//                    }else{
+                       // to.setText(setLocation(center));
+                      //  Log.d("debug" ,"--------------- flags to ---------------"+ flag_to );
+                        if(center != null){
+                            to_lat = ""+center.latitude ;
+                            to_lng = ""+center.longitude;
+                            if(map_moved_from_flag){
+                                to.setText(setLocation(center));
+                                map_moved_from_flag =false ;
+                            }
+
+                        }
+                   // }
+
+
+                }
+
+
+
+
 //                if(center != null){
 //                    Log.d("debug", "Eita certer er lat lang: " + center.toString());
-//                    textView.setText(center.toString());
-//                    setLocation(center);
+////                    textView.setText(center.toString());
+////                    setLocation(center);
+//
+//                    sendData(""+center.latitude , ""+center.longitude);
+//
 //                }
-//            }
-//        });
+            }
+        });
 
     }
 
 
 
-    public void setLocation(LatLng l) {
+
+    public String setLocation(LatLng l) {
 
         Geocoder geocoder = new Geocoder(MyPlacePicker.this);
         try {
+            final String k ;
 
             addresses = geocoder.getFromLocation(l.latitude, l.longitude, 1);
 
             if (addresses.size() != 0) {
                 Address obj = addresses.get(0);
                 String add = obj.getAddressLine(0);
-                add = add + " , " + obj.getCountryName() + " , " + obj.getCountryCode() + " , " + obj.getAdminArea();
-                textView.setText(add);
+               // add = add + " , " + obj.getCountryName() + " , " + obj.getCountryCode() + " , " + obj.getAdminArea();
+               // from.setText(add);
 
+                loc = add+"";
 
             } else {
 
-                Log.d("debug", "kono location i paynai :/ ");
+                Log.d("debug", "-----------kono location i paynai :/ ----------");
             }
-            //String add = obj.getAddressLine(0);
-            // add = add + " , " + obj.getCountryName()+ " , " +obj.getCountryCode()+ " , " +obj.getAdminArea();
-            //textView.setText(add);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Log.d("debug", "The size is " +
-                addresses.size());
+       // Log.d("debug", "----------------The size is ---------------------" + addresses.size());
+
+        return  loc;
     }
 
 
     private void init() {
 
+        Log.d("debug", "---------------------- init call korsi ----------------------");
 
         if (ActivityCompat.checkSelfPermission(MyPlacePicker.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MyPlacePicker.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.d("debug", "permission");
+            Log.d("debug", "----------------------permission er request kortese --------------------");
             requestPermission();
         }
         fusedLocationProviderClient.getLastLocation().addOnSuccessListener(MyPlacePicker.this, new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(Location location) {
                 if (location != null) {
-                    Log.d("debug", "location found");
+                    Log.d("debug", "--------------location found------------------");
 
                     current = new LatLng(location.getLatitude(), location.getLongitude());
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
@@ -223,8 +556,18 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, zoomLevel));
                     mMap.getMaxZoomLevel();
                     setLocation(current);
+
+                    from_lat = current.latitude+"" ;
+                    from_lng = current.longitude+"";
+                    current_flag = false ;
+
+                }else{
+                    Log.d("debug", "--------------location not found again calling init ------------------");
+                    current_flag = true ;
                 }
             }
+
+
         });
     }
 
@@ -241,7 +584,6 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
         } else if (GoogleApiAvailability.getInstance().isUserResolvableError(available)) {
             System.out.println("n");
             Log.d("debug", "error ");
-            // Dialog d = GoogleApiAvailability.getInstance().getErrorDialog(MainActivity.this, available , Error);
             res = false;
 
         } else {
@@ -253,6 +595,7 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
 
     public void requestPermission() {
         ActivityCompat.requestPermissions(MyPlacePicker.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        Log.d("debug ", "------------------ getting permission  --------------------");
     }
 
     public void sendData(String lati , String longi){
@@ -303,7 +646,52 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
         });
     }
 
+    //-------------  HIDING THE KEYBOARD ------------------ //
 
+    public static void hideSoftKeyboard(Activity activity) {
+
+        Log.d("debug ", "-------------------- keyboard off-----------------");
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+
+        View focusedView = activity.getCurrentFocus();
+
+        if (focusedView != null) {
+            inputMethodManager.hideSoftInputFromWindow(focusedView.getWindowToken(),
+                    InputMethodManager.HIDE_NOT_ALWAYS);
+        }
+    }
+
+
+    //-------------------- CHECK ON INTERNET ---------------- //
+
+    private boolean internetOn(){
+        boolean have_wifi = false ;
+        boolean have_data = false;
+
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+
+        NetworkInfo[] networkInfos = connectivityManager.getAllNetworkInfo();
+
+        for(NetworkInfo info:networkInfos){
+            if (info.getTypeName().equalsIgnoreCase("WIFI")){
+                if(info.isConnected()){
+                    have_wifi=true;
+                }
+
+            }
+            if (info.getTypeName().equalsIgnoreCase("MOBILE")){
+
+                if (info.isConnected()){
+                    have_data = true;
+                }
+
+
+            }
+        }
+        return have_wifi || have_data ;
+    }
 
 
 }
