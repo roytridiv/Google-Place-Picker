@@ -129,7 +129,7 @@ public class MakeRoute extends FragmentActivity implements OnMapReadyCallback, R
 
 
         // Getting URL to the Google Directions API
-       // String url = getDirectionsUrl(new LatLng(23.747949, 90.396824), new LatLng(23.866874, 90.404575));
+        // String url = getDirectionsUrl(new LatLng(23.747949, 90.396824), new LatLng(23.866874, 90.404575));
         String url = getDirectionsUrl(new LatLng(Double.parseDouble(from_lat), Double.parseDouble(from_lng)), new LatLng(Double.parseDouble(to_lat), Double.parseDouble(to_lng)));
         //String url = getDirectionsUrl(new LatLng(23.747546005998082, 23.747546005998082), new LatLng(23.866874, 90.404575));
 
@@ -148,7 +148,7 @@ public class MakeRoute extends FragmentActivity implements OnMapReadyCallback, R
         // Set listeners for click events.
 
 
-       // List<LatLng> path = new ArrayList();
+        // List<LatLng> path = new ArrayList();
 
 
         //Execute Directions API request
@@ -406,7 +406,7 @@ public class MakeRoute extends FragmentActivity implements OnMapReadyCallback, R
                             end = new LatLng(lat, lng);
 
                             // End marker
-                             options = new MarkerOptions();
+                            options = new MarkerOptions();
                             options.position(end);
                             options.icon(BitmapDescriptorFactory.fromResource(R.drawable.destination));
                             mMap.addMarker(options);
@@ -657,26 +657,26 @@ public class MakeRoute extends FragmentActivity implements OnMapReadyCallback, R
         boolean hasPoints = false;
         Double maxLat = null, minLat = null, minLon = null, maxLon = null;
 
-            List<LatLng> pts = lstLatLngRoute;
-            for (LatLng coordinate : pts) {
+        List<LatLng> pts = lstLatLngRoute;
+        for (LatLng coordinate : pts) {
 
-                maxLat = maxLat != null ? Math.max(coordinate.latitude, maxLat) : coordinate.latitude;
-                minLat = minLat != null ? Math.min(coordinate.latitude, minLat) : coordinate.latitude;
+            maxLat = maxLat != null ? Math.max(coordinate.latitude, maxLat) : coordinate.latitude;
+            minLat = minLat != null ? Math.min(coordinate.latitude, minLat) : coordinate.latitude;
 
-                maxLon = maxLon != null ? Math.max(coordinate.longitude, maxLon) : coordinate.longitude;
-                minLon = minLon != null ? Math.min(coordinate.longitude, minLon) : coordinate.longitude;
+            maxLon = maxLon != null ? Math.max(coordinate.longitude, maxLon) : coordinate.longitude;
+            minLon = minLon != null ? Math.min(coordinate.longitude, minLon) : coordinate.longitude;
 
-                hasPoints = true;
-            }
+            hasPoints = true;
+        }
 
-            Log.d("debug" , " Max --->"+ maxLat + " , "+maxLon + " , MIN----->"+ minLat+" , "+minLon);
+        Log.d("debug" , " Max --->"+ maxLat + " , "+maxLon + " , MIN----->"+ minLat+" , "+minLon);
 
-            if (hasPoints) {
+        if (hasPoints) {
             LatLngBounds latLngBounds = new LatLngBounds(  new LatLng(minLat, minLon), new LatLng(maxLat, maxLon));
 
-                float zoomLevel = 0.0f;
+            float zoomLevel = 0.0f;
 
-                float f = Float.parseFloat(dis);
+            float f = Float.parseFloat(dis);
 
             if (f < 1128) { zoomLevel = 15.5f; }
             else if ((f > 1128) && (f < 2256)) { zoomLevel = 14.5f; }

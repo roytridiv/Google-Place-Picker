@@ -1,5 +1,6 @@
 package com.example.google_place_picker;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
@@ -18,9 +19,13 @@ import android.graphics.Point;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -48,7 +53,9 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.net.PlacesClient;
@@ -119,6 +126,11 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
     LottieAnimationView l;
     LinearLayout linearLayout ;
     public String loc ="";
+    boolean gps_enabled = false;
+    boolean network_enabled = false;
+    LocationManager lm ;
+
+    GoogleApiClient mGoogleApiClient ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +141,8 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
 
 
+
+        onStart();
 
         mMarkerParentView = findViewById(R.id.marker_view_incl);
         marker = findViewById(R.id.marker_icon_view);
@@ -159,6 +173,12 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
             l.setProgress(0.5f);
         }else{
 
+
+            if(!isLocationEnabled(MyPlacePicker.this)){
+                displayPromptForEnablingGPS(MyPlacePicker.this);
+                // restartSctivity();
+            }
+
             l.setVisibility(View.GONE);
             linearLayout.setVisibility(View.GONE);
             mapFragment.getMapAsync(this);
@@ -174,6 +194,8 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
                     ResourcesCompat.getFont(this,R.font.helvetica_regular));
 
 
+            Toast.makeText(MyPlacePicker.this , "Press the Red Button to get your location" ,Toast.LENGTH_LONG).show();
+
             if (savedInstanceState != null)
                 lastknownlocation = savedInstanceState.getParcelable(KEY_LOCATION);
 
@@ -184,7 +206,12 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
 
 
             if (ok()) {
+                if(!isLocationEnabled(MyPlacePicker.this)){
+                    displayPromptForEnablingGPS(MyPlacePicker.this);
+                }
+
                 init();
+
             }
 
 
@@ -307,6 +334,11 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
         my_location.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+               // locationCheck(MyPlacePicker.this);
+                if(!isLocationEnabled(MyPlacePicker.this)){
+                    displayPromptForEnablingGPS(MyPlacePicker.this);
+                   // restartSctivity();
+                }
                 init();
             }
         });
@@ -391,55 +423,34 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
             @Override
             public void onCameraMove() {
 
-             //   Log.d("debug" , "--------------- Map is moving ---------------");
+                Log.d("debug" , "--------------- Map is moving ---------------");
 
-//                closeKeyboard.setVisibility(View.GONE);
-//                 hideSoftKeyboard(MyPlacePicker.this);
+                closeKeyboard.setVisibility(View.GONE);
+                 hideSoftKeyboard(MyPlacePicker.this);
 
                  empty_from_flag = false;
                  empty_to_flag = false ;
 
-
+                map_moved_from_flag = true ;
             }
         });
 
-        mMap.setOnCameraMoveStartedListener(new GoogleMap.OnCameraMoveStartedListener() {
-            @Override
-            public void onCameraMoveStarted(int reason) {
-            //    Log.d("debug" , "--------------- Map  STARTED  moving ---------------");
-//
-//                closeKeyboard.setVisibility(View.GONE);
-//                 hideSoftKeyboard(MyPlacePicker.this);
-            }
-        });
-
-        mMap.setOnCameraMoveCanceledListener(new GoogleMap.OnCameraMoveCanceledListener() {
-            @Override
-            public void onCameraMoveCanceled() {
-                Log.d("debug" , "--------------- Map  Cancelled  moving ---------------");
-                closeKeyboard.setVisibility(View.GONE);
-                 hideSoftKeyboard(MyPlacePicker.this);
-
-
-                 map_moved_from_flag = true ;
-
-
-            }
-        });
 
 
 
         mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
             @Override
             public void onCameraIdle() {
-            //    Log.d("debug" , "--------------- Map is IDLE ---------------");
+                Log.d("debug" , "--------------- Map is IDLE ---------------");
 
                 center = mMap.getCameraPosition().target;
                 // Log.d("debug", "Eita certer er lat lang: " + center.toString());
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(center));
+                Log.d("debug" , "---------- center er lat lang-------- "+ center.toString());
+               // mMap.moveCamera(CameraUpdateFactory.newLatLng(center));
 
-               // fromMain = center ;
-
+//
+//               // fromMain = center ;
+//
                 if(flag_from){
                     //from.setText(center.latitude + " , "+center.longitude);
 
@@ -447,7 +458,7 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
 //
 //                    }else{
                       //  from.setText(setLocation(center));
-                     //   Log.d("debug" ,"--------------- flags from ---------------"+ flag_from );
+                        Log.d("debug" ,"--------------- flags from ---------------"+ flag_from );
                         if(center != null){
                             from_lat = ""+center.latitude ;
                             from_lng = ""+center.longitude;
@@ -472,7 +483,7 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
 //
 //                    }else{
                        // to.setText(setLocation(center));
-                      //  Log.d("debug" ,"--------------- flags to ---------------"+ flag_to );
+                        Log.d("debug" ,"--------------- flags to ---------------"+ flag_to );
                         if(center != null){
                             to_lat = ""+center.latitude ;
                             to_lng = ""+center.longitude;
@@ -564,11 +575,42 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
                 }else{
                     Log.d("debug", "--------------location not found again calling init ------------------");
                     current_flag = true ;
+                    init();
                 }
             }
 
 
         });
+
+//        fusedLocationProviderClient.getLastLocation().addOnCompleteListener(
+//                new OnCompleteListener<Location>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<Location> task) {
+//                        Location location = task.getResult();
+//                if (location != null) {
+//                    Log.d("debug", "--------------location found------------------");
+//
+//                    current = new LatLng(location.getLatitude(), location.getLongitude());
+//                    mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
+//                    float zoomLevel = 16.0f;
+//                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, zoomLevel));
+//                    mMap.getMaxZoomLevel();
+//                    setLocation(current);
+//
+//                    from_lat = current.latitude+"" ;
+//                    from_lng = current.longitude+"";
+//                    current_flag = false ;
+//
+//                }else{
+//
+//
+//                    Log.d("debug", "--------------location not found again calling init ------------------");
+//                    current_flag = true ;
+//                }
+//                    }
+//                }
+//        );
+
     }
 
     public boolean ok() {
@@ -692,6 +734,76 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
         }
         return have_wifi || have_data ;
     }
+
+
+    public static void displayPromptForEnablingGPS(
+            final Activity activity)
+    {
+        final AlertDialog.Builder builder =
+                new AlertDialog.Builder(activity);
+        final String action = Settings.ACTION_LOCATION_SOURCE_SETTINGS;
+        final String message = "Enable either GPS or any other location"
+                + " service to find current location.  Click OK to go to"
+                + " location services settings to let you do so.";
+
+        builder.setMessage(message)
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface d, int id) {
+                                activity.startActivity(new Intent(action));
+                                d.dismiss();
+                            }
+                        })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface d, int id) {
+                                d.cancel();
+                            }
+                        });
+        builder.create().show();
+    }
+
+    public static boolean isLocationEnabled(Context context) {
+        int locationMode = 0;
+        String locationProviders;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            try {
+                locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
+            } catch (Settings.SettingNotFoundException e) {
+                e.printStackTrace();
+            }
+            return locationMode != Settings.Secure.LOCATION_MODE_OFF;
+        } else {
+            locationProviders = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
+            return !TextUtils.isEmpty(locationProviders);
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.isConnected();
+        }
+    }
+
+    protected void onResume() {
+
+        super.onResume();
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.isConnected();
+        }
+    }
+
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//       // setUpMapIfNeeded();
+//        mGoogleApiClient.isConnected();
+//    }
+
+
 
 
 }
