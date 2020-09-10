@@ -154,7 +154,7 @@ public class NearbyHospital extends FragmentActivity implements OnMapReadyCallba
         double lng = origin.longitude;
 
 
-        StringBuilder googlePlaceUrl = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+lat+","+lng+"&radius=10000&type=hospital&key=AIzaSyBkCNdgswUBcGOk6Yq9Jy0KR--_EUMPaTA");
+        StringBuilder googlePlaceUrl = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+lat+","+lng+"&radius=10000&type=hospital&key=API_KEY");
 
 
 

@@ -333,7 +333,7 @@ public class MakeRoute extends FragmentActivity implements OnMapReadyCallback, R
         String mode = "mode=driving";
 
         // Building the parameters to the web service
-        String parameters = str_origin + "&" + str_dest + "&" + sensor + "&" + mode + "&key=AIzaSyDq5gYTlfiBuszmn2IrwQ7T0vxgIBn3Qac";
+        String parameters = str_origin + "&" + str_dest + "&" + sensor + "&" + mode + "&key=API_KEY";
 
         // Output format
         String output = "json";

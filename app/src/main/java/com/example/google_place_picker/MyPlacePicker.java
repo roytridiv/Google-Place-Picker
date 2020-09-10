@@ -184,7 +184,7 @@ public class MyPlacePicker extends FragmentActivity implements OnMapReadyCallbac
             mapFragment.getMapAsync(this);
 
 
-            Places.initialize(getApplicationContext(), "AIzaSyAsMc4rdygUZ3ye9iOfuio_3Ek41KZaaEE");
+            Places.initialize(getApplicationContext(), "API_KEY");
 
 
             MotionToast.Companion.createToast(this,"Map generated!",
