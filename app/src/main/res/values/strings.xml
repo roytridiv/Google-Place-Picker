@@ -2,6 +2,6 @@
     <string name="app_name">Google-Place-Picker</string>
     <string name="title_activity_my_place_picker">Route Finder</string>
     <string name="title_activity_make_route">Map_Route</string>
-    <string name="AIzaSyAsMc4rdygUZ3ye9iOfuio_3Ek41KZaaEE">mapsApi</string>
+    <string name="api_key">{PLACE-YOUR-KEY}</string>
     <string name="title_activity_nearby_hospital">Map</string>
 </resources>
